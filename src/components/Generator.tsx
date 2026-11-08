@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { BrainCircuit, Check, FileText, Layers, Loader2, Sparkles, Wand2 } from 'lucide-react';
+import { BrainCircuit, Check, FileText, KeyRound, Layers, Loader2, Sparkles, Wand2 } from 'lucide-react';
 import { useStore } from '../store';
 import { AIConfig, Level, LevelMode } from '../lib/types';
 import { generateCards, generateNoteAll, generateTest } from '../lib/generate';
@@ -30,6 +30,7 @@ export default function Generator({
   onSubjectChange,
   presetMaterialIds,
   onDone,
+  onOpenSettings,
 }: {
   open: boolean;
   onClose: () => void;
@@ -37,6 +38,7 @@ export default function Generator({
   onSubjectChange: (id: string) => void;
   presetMaterialIds?: string[];
   onDone?: (kind: 'test' | 'cards' | 'note', id: string) => void;
+  onOpenSettings?: () => void;
 }) {
   const { data, settings, mastery, addTest, addDeck, addNote, addBank, bump } = useStore();
   const toast = useToast();
@@ -223,7 +225,8 @@ export default function Generator({
         if (t) onDone?.('test', t.id);
       }
     } catch (e: any) {
-      toast(e?.message || 'Ошибка генерации', 'err');
+      const msg = e?.message || 'Ошибка генерации';
+      toast(e?.hint ? `${msg} — ${e.hint}` : msg, 'err');
       setBusy(false);
     }
   };
@@ -259,6 +262,11 @@ export default function Generator({
             <div className="rounded-2xl border p-3.5 text-sm" style={{ borderColor: 'color-mix(in srgb,var(--warn) 45%, transparent)', background: 'color-mix(in srgb,var(--warn) 10%, transparent)' }}>
               <b>ИИ-провайдер не настроен.</b> Работает локальный режим (вопросы и карточки из вашего материала). Чтобы получить настоящий ИИ-конспект и сложные вопросы — добавьте бесплатный ключ в{' '}
               <b>Настройках</b>.
+              {onOpenSettings && (
+                <button className="btn-ghost mt-2.5 w-full sm:w-auto" onClick={onOpenSettings}>
+                  <KeyRound size={15} /> Открыть настройки
+                </button>
+              )}
             </div>
           )}
           {cfg.provider === 'local' && (
