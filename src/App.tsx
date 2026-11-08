@@ -258,6 +258,10 @@ function Shell() {
         subjectId={genSubject}
         onSubjectChange={setGenSubject}
         presetMaterialIds={genPreset}
+        onOpenSettings={() => {
+          setGenOpen(false);
+          go({ k: 'settings' });
+        }}
         onDone={(kind, id) => {
           if (kind === 'test') go({ k: 'test', id });
           else if (kind === 'cards') go({ k: 'cards', id });
