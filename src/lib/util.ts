@@ -78,3 +78,37 @@ export const safeJson = <T,>(s: string | null | undefined, fallback: T): T => {
 export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export const truncate = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1) + '…' : s);
+
+/**
+ * A dynamically imported chunk could not be fetched. This happens when the page
+ * runs an outdated build whose hashed assets are already gone from the server
+ * (after a redeploy). Reload once to pull the fresh index.html instead of
+ * leaving the user with a cryptic "Failed to fetch dynamically imported module".
+ */
+export const isChunkLoadError = (e: any): boolean =>
+  /Failed to fetch dynamically imported module|error loading dynamically imported module|Importing a module script failed/i.test(
+    String(e?.message || e),
+  );
+
+const CHUNK_RELOAD_FLAG = 'bts:chunk-reload';
+
+export function reloadOnceOnChunkError(e: any): boolean {
+  if (!isChunkLoadError(e)) return false;
+  let alreadyReloaded = false;
+  try {
+    alreadyReloaded = sessionStorage.getItem(CHUNK_RELOAD_FLAG) === '1';
+    sessionStorage.setItem(CHUNK_RELOAD_FLAG, '1');
+  } catch {
+    /* private mode — fall through to a plain reload */
+  }
+  if (alreadyReloaded) {
+    try {
+      sessionStorage.removeItem(CHUNK_RELOAD_FLAG);
+    } catch {
+      /* ignore */
+    }
+    return false;
+  }
+  location.reload();
+  return true;
+}
