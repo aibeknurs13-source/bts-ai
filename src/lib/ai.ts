@@ -24,8 +24,8 @@ export class AIError extends Error {
 
 /**
  * Бесплатный tier Gemini (Google AI Studio) — модели, доступные без карты и биллинга.
- * gemini-2.5-flash и gemini-2.5-pro объявлены устаревшими: с 1 декабря 2026 запросы
- * к gemini-2.5-flash автоматически перенаправляются на gemini-3.5-flash-lite.
+ * gemini-2.5-pro устарел; gemini-2.5-flash с 1 декабря 2026 перенаправляется
+ * на gemini-3.5-flash-lite, но для «старых» ключей остаётся доступен.
  */
 const GEMINI_MODELS = [
   'gemini-3.8-flash',
@@ -33,7 +33,24 @@ const GEMINI_MODELS = [
   'gemini-3.5-flash-lite',
   'gemini-3.1-flash-lite',
   'gemini-2.5-flash-lite',
+  'gemini-2.5-flash',
 ];
+
+/** Gemini 3.x: temperature/top_p/top_k объявлены устаревшими (сейчас игнорируются, позже — HTTP 400). */
+const isGemini3x = (model: string) => /^gemini-(3|4|5)\b/.test(model);
+
+/** Подсказка к типовой ошибке Gemini — чтобы не гадать, что делать. */
+function geminiHint(msg: string): string | undefined {
+  if (/API key not valid|API_KEY_INVALID/i.test(msg))
+    return 'Проверьте API-ключ: Настройки → «Google Gemini». Бесплатный ключ: aistudio.google.com/apikey';
+  if (/PERMISSION_DENIED|403/i.test(msg))
+    return 'Нет доступа к модели. Выберите другую модель в настройках или проверьте доступ к Gemini API в AI Studio.';
+  if (/RESOURCE_EXHAUSTED|429|quota/i.test(msg))
+    return 'Исчерпана квота бесплатного tier (сброс — в полночь по Pacific) или слишком много запросов. Попробуйте модель полегче.';
+  if (/not found|NOT_FOUND|404/i.test(msg))
+    return 'Модель недоступна для этого ключа — приложение попробует следующую в списке.';
+  return undefined;
+}
 
 export const freeModels = {
   gemini: GEMINI_MODELS,
@@ -100,12 +117,16 @@ async function callGemini(cfg: AIConfig, req: AIRequest): Promise<string> {
     try {
       const parts: any[] = [{ text: req.prompt }];
       for (const img of req.images || []) parts.push({ inlineData: { mimeType: img.mime, data: img.data } });
+      const gen3 = isGemini3x(model);
       const body: any = {
         systemInstruction: { parts: [{ text: req.system }] },
         contents: [{ role: 'user', parts }],
         generationConfig: {
-          temperature: cfg.temperature,
-          maxOutputTokens: req.maxTokens || 8192,
+          // В Gemini 3.x temperature устарел и игнорируется (а в будущих версиях даёт HTTP 400).
+          ...(gen3 ? {} : { temperature: cfg.temperature }),
+          // У Gemini 3.x включено reasoning: токены размышления идут из того же бюджета,
+          // поэтому отдаём больше, иначе текст ответа может остаться пустым.
+          maxOutputTokens: req.maxTokens || (gen3 ? 16384 : 8192),
           ...(req.json ? { responseMimeType: 'application/json' } : {}),
         },
       };
@@ -130,7 +151,10 @@ async function callGemini(cfg: AIConfig, req: AIRequest): Promise<string> {
       if (!/404|not found|not supported/i.test(msg)) break;
     }
   }
-  throw lastErr instanceof AIError ? lastErr : new AIError(String(lastErr?.message || 'Ошибка Gemini'));
+  throw new AIError(
+    String((lastErr as any)?.message || 'Ошибка Gemini'),
+    geminiHint(String((lastErr as any)?.message || '')) || (lastErr as AIError)?.hint,
+  );
 }
 
 /* --------------------------------------------- OpenAI-compatible (OpenRouter / Ollama / any) */
@@ -167,15 +191,27 @@ async function callOpenAI(cfg: AIConfig, req: AIRequest, allowNoJson: boolean): 
     if (typeof txt === 'string' && txt.trim()) return txt.trim();
     throw new AIError('Пустой ответ модели');
   } catch (e) {
-    if (!allowNoJson || !req.json) throw e;
+    if (!allowNoJson || !req.json) throw openaiError(e);
     // Some free models reject response_format — retry without it.
     const body2 = { ...body };
     delete body2.response_format;
     const data = await withRetry(() => httpJSON(url, { method: 'POST', headers, body: JSON.stringify(body2) }));
     const txt = data?.choices?.[0]?.message?.content ?? '';
     if (typeof txt === 'string' && txt.trim()) return txt.trim();
-    throw e;
+    throw openaiError(e);
   }
+}
+
+/** Понятная подсказка для типичных ошибок OpenAI-совместимых провайдеров. */
+function openaiError(e: any): AIError {
+  const msg = String(e?.message || 'Ошибка провайдера');
+  if (/401|403|invalid.*key|authentication/i.test(msg))
+    return new AIError(msg, 'Проверьте API-ключ в настройках и базовый URL (для OpenRouter: openrouter.ai/keys).');
+  if (/429|quota|rate limit/i.test(msg))
+    return new AIError(msg, 'Превышен лимит запросов провайдера. Попробуйте позже или другую модель.');
+  if (/404|model.*not found/i.test(msg))
+    return new AIError(msg, 'Модель недоступна — проверьте её идентификатор в настройках.');
+  return e instanceof AIError ? e : new AIError(msg);
 }
 
 /* ------------------------------------------------------------------ entry */
