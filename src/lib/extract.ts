@@ -1,4 +1,5 @@
 import JSZip from 'jszip';
+import { reloadOnceOnChunkError } from './util';
 
 export interface ExtractResult {
   text: string;
@@ -19,8 +20,18 @@ async function readArrayBuffer(file: File): Promise<ArrayBuffer> {
 /* ------------------------------------------------------------------- PDF */
 
 export async function extractPdf(file: File): Promise<ExtractResult> {
-  const pdfjs = await import('pdfjs-dist');
-  const workerUrl = (await import('pdfjs-dist/build/pdf.worker.min.mjs?url')).default;
+  let pdfjs: typeof import('pdfjs-dist');
+  let workerUrl: string;
+  try {
+    pdfjs = await import('pdfjs-dist');
+    workerUrl = (await import('pdfjs-dist/build/pdf.worker.min.mjs?url')).default;
+  } catch (e) {
+    // Чанк pdf.js недоступен — страница открыта из устаревшей сборки. Перезагружаем.
+    if (!reloadOnceOnChunkError(e)) {
+      throw new Error('Не удалось загрузить модуль чтения PDF — обновите страницу (Ctrl+F5)');
+    }
+    throw e;
+  }
   pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
   const data = await readArrayBuffer(file);
   const doc = await pdfjs.getDocument({ data: new Uint8Array(data), isEvalSupported: false }).promise;
