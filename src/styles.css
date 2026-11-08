@@ -1,0 +1,277 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #090c13;
+  --bg2: #0e1320;
+  --surface: rgba(255, 255, 255, 0.045);
+  --surface2: rgba(255, 255, 255, 0.08);
+  --surface3: rgba(255, 255, 255, 0.12);
+  --border: rgba(255, 255, 255, 0.1);
+  --border2: rgba(255, 255, 255, 0.16);
+  --text: #e9edf7;
+  --muted: #8b95af;
+  --a1: #2dd4bf;
+  --a2: #a78bfa;
+  --a3: #fbbf24;
+  --ok: #34d399;
+  --warn: #fbbf24;
+  --bad: #fb7185;
+  --lA: #34d399;
+  --lB: #fbbf24;
+  --lC: #fb7185;
+  --shadow: 0 18px 50px -18px rgba(0, 0, 0, 0.85);
+  --glass: blur(18px) saturate(140%);
+}
+
+html.light {
+  --bg: #eef1f8;
+  --bg2: #ffffff;
+  --surface: rgba(255, 255, 255, 0.78);
+  --surface2: rgba(255, 255, 255, 0.95);
+  --surface3: rgba(15, 23, 42, 0.06);
+  --border: rgba(15, 23, 42, 0.1);
+  --border2: rgba(15, 23, 42, 0.18);
+  --text: #0d1526;
+  --muted: #59647c;
+  --shadow: 0 18px 44px -22px rgba(15, 23, 42, 0.45);
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Manrope, ui-sans-serif, system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(900px 480px at 82% -12%, rgba(45, 212, 191, 0.16), transparent 62%),
+    radial-gradient(760px 460px at 8% 8%, rgba(167, 139, 250, 0.16), transparent 60%),
+    radial-gradient(700px 500px at 50% 115%, rgba(251, 191, 36, 0.08), transparent 60%);
+}
+
+html.light body::before {
+  background:
+    radial-gradient(900px 480px at 82% -12%, rgba(45, 212, 191, 0.16), transparent 62%),
+    radial-gradient(760px 460px at 8% 8%, rgba(167, 139, 250, 0.14), transparent 60%);
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+}
+
+::selection {
+  background: rgba(167, 139, 250, 0.35);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border2);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@layer components {
+  .glass {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    backdrop-filter: var(--glass);
+    -webkit-backdrop-filter: var(--glass);
+  }
+  .card {
+    @apply rounded-3xl border p-4 sm:p-5;
+    background: var(--surface);
+    border-color: var(--border);
+    box-shadow: var(--shadow);
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-bold transition active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none;
+    background: linear-gradient(135deg, var(--a1), var(--a2));
+    color: #06131a;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-bold transition active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition whitespace-nowrap;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+  .chip-on {
+    background: linear-gradient(135deg, var(--a1), var(--a2));
+    color: #06131a;
+    border-color: transparent;
+  }
+  .input {
+    @apply w-full rounded-2xl px-4 py-3 text-sm;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    outline: none;
+  }
+  .input:focus {
+    border-color: var(--a2);
+    box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.18);
+  }
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3 {
+  font-weight: 800;
+  margin: 1.1em 0 0.45em;
+  line-height: 1.25;
+}
+.markdown-body h1 {
+  font-size: 1.45rem;
+}
+.markdown-body h2 {
+  font-size: 1.22rem;
+  color: var(--a1);
+}
+.markdown-body h3 {
+  font-size: 1.05rem;
+  color: var(--a2);
+}
+.markdown-body p {
+  margin: 0.55em 0;
+}
+.markdown-body ul,
+.markdown-body ol {
+  margin: 0.5em 0 0.5em 1.1em;
+  list-style: disc;
+}
+.markdown-body ol {
+  list-style: decimal;
+}
+.markdown-body li {
+  margin: 0.25em 0;
+}
+.markdown-body table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.9em 0;
+  font-size: 0.9rem;
+  display: block;
+  overflow-x: auto;
+}
+.markdown-body th,
+.markdown-body td {
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  text-align: left;
+}
+.markdown-body th {
+  background: var(--surface2);
+}
+.markdown-body code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85em;
+  background: var(--surface3);
+  padding: 1px 6px;
+  border-radius: 6px;
+}
+.markdown-body pre {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 12px 14px;
+  border-radius: 14px;
+  overflow-x: auto;
+}
+.markdown-body pre code {
+  background: none;
+  padding: 0;
+}
+.markdown-body blockquote {
+  border-left: 3px solid var(--a2);
+  padding-left: 12px;
+  color: var(--muted);
+  margin: 0.7em 0;
+}
+
+.katex {
+  font-size: 1.02em;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise {
+  animation: rise 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.pop {
+  animation: pop 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+
+.shimmer {
+  background: linear-gradient(90deg, var(--surface2) 25%, var(--surface3) 50%, var(--surface2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.safe-b {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
+}
