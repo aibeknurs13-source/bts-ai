@@ -21,7 +21,7 @@ export const DEFAULT_GOOGLE_ID = '549332087816-cjqvi6bjkoumsuqdj852vn7c14bma3io.
 export const DEFAULT_AI: AIConfig = {
   provider: 'gemini',
   key: '',
-  geminiModel: 'gemini-2.5-flash',
+  geminiModel: 'gemini-3.8-flash',
   openaiModel: 'google/gemma-3-27b-it:free',
   openaiBase: '',
   temperature: 0.7,
