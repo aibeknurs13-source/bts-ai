@@ -32,7 +32,8 @@ export default function Settings() {
       toast(out ? 'Подключение работает ✓' : 'Пустой ответ', out ? 'ok' : 'err');
     } catch (e: any) {
       setOk(false);
-      toast(e?.message || 'Ошибка подключения', 'err');
+      const msg = e?.message || 'Ошибка подключения';
+      toast(e?.hint ? `${msg} — ${e.hint}` : msg, 'err');
     }
     setChecking(false);
   };
@@ -103,7 +104,7 @@ export default function Settings() {
               hint={
                 ai.provider === 'gemini' ? (
                   <>
-                    Получите бесплатный ключ: <b>aistudio.google.com/apikey</b> → Create API key. Бесплатный tier: 15 запросов/мин, 1500 в день.
+                    Получите бесплатный ключ: <b>aistudio.google.com/apikey</b> → Create API key. Бесплатный tier без карты; лимиты видно в <b>aistudio.google.com/rate-limit</b>.
                   </>
                 ) : ai.provider === 'openrouter' ? (
                   <>
@@ -179,6 +180,8 @@ export default function Settings() {
           <ShieldCheck size={15} className="mt-0.5 shrink-0" style={{ color: 'var(--ok)' }} />
           <span>
             Ключ хранится только в вашем браузере (IndexedDB) и отправляется только выбранному провайдеру. На наш сервер он не попадает — потому что его и нет.
+            <br />
+            <b>Важно:</b> настройки привязаны к адресу сайта в этом браузере. Если адрес изменился (новый домен), перенесите ключ через «Копировать» → «Импорт из JSON» на этой же странице.
           </span>
         </div>
       </div>
